@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gửi dữ liệu tới 维格表</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <div class="container">
+        <h1>📩 Gửi tin nhắn</h1>
+        <p class="subtitle">Dữ liệu sẽ được lưu vào bảng tính 维格表</p>
+
+        <form id="messageForm">
+            <div class="form-group">
+                <label for="name">👤 Tên của bạn</label>
+                <input type="text" id="name" placeholder="Nhập tên của bạn..." required />
+            </div>
+
+            <div class="form-group">
+                <label for="content">💬 Nội dung tin nhắn</label>
+                <textarea id="content" rows="4" placeholder="Nhập nội dung tin nhắn..." required></textarea>
+            </div>
+
+            <button type="submit" id="submitBtn">🚀 Gửi tin nhắn</button>
+        </form>
+
+        <div id="status" class="status hidden"></div>
+
+        <div class="footer">
+            <p>🔒 Dữ liệu được gửi an toàn tới 维格表</p>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // 🛠️ CẤU HÌNH - Thay thế bằng thông tin thực tế của bạn
+        // ============================================================
+        const VIKA_API_TOKEN = "uskLIB1kFYYlrNd9LKzRiSh"; // Token của bạn
+        const DATASHEET_ID = "dst9xCMgSYUadTGJKX/viw7oElkd1rr0?token=54v4VDcrs0XA"; // ID bảng tính của bạn
+        const FIELD_NAME = "Tên"; // Tên cột "Tên" trong bảng của bạn
+        const FIELD_CONTENT = "Nội dung"; // Tên cột "Nội dung" trong bảng của bạn
+        // ============================================================
+
+        const form = document.getElementById('messageForm');
+        const nameInput = document.getElementById('name');
+        const contentInput = document.getElementById('content');
+        const submitBtn = document.getElementById('submitBtn');
+        const statusDiv = document.getElementById('status');
+
+        // Hàm hiển thị trạng thái
+        function setStatus(message, type = 'info') {
+            statusDiv.textContent = message;
+            statusDiv.className = 'status ' + type;
+            statusDiv.classList.remove('hidden');
+        }
+
+        // Hàm gửi dữ liệu lên 维格表
+        async function sendToVika(name, content) {
+            const url = `https://vika.cn/fusion/v1/datasheets/${DATASHEET_ID}/records`;
+
+            // Tạo payload theo format của 维格表
+            const payload = {
+                records: [
+                    {
+                        fields: {
+                            [FIELD_NAME]: name,
+                            [FIELD_CONTENT]: content
+                        }
+                    }
+                ]
+            };
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${VIKA_API_TOKEN}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    return { success: true, data: result };
+                } else {
+                    // Xử lý lỗi từ API
+                    const errorMsg = result.message || 'Không xác định';
+                    return { success: false, error: errorMsg };
+                }
+            } catch (error) {
+                return { success: false, error: 'Lỗi kết nối: ' + error.message };
+            }
+        }
+
+        // Xử lý sự kiện submit form
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            // Lấy dữ liệu từ form
+            const name = nameInput.value.trim();
+            const content = contentInput.value.trim();
+
+            // Kiểm tra dữ liệu đầu vào
+            if (!name || !content) {
+                setStatus('⚠️ Vui lòng nhập đầy đủ tên và nội dung tin nhắn.', 'error');
+                return;
+            }
+
+            // Vô hiệu hóa nút và hiển thị trạng thái đang gửi
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Đang gửi...';
+            setStatus('🔄 Đang gửi dữ liệu tới 维格表...', 'info');
+
+            // Gửi dữ liệu lên 维格表
+            const result = await sendToVika(name, content);
+
+            // Xử lý kết quả
+            if (result.success) {
+                setStatus('✅ Gửi thành công! Dữ liệu đã được lưu vào 维格表.', 'success');
+                // Xóa form sau khi gửi thành công
+                form.reset();
+            } else {
+                setStatus(`❌ Gửi thất bại: ${result.error}`, 'error');
+            }
+
+            // Kích hoạt lại nút
+            submitBtn.disabled = false;
+            submitBtn.textContent = '🚀 Gửi tin nhắn';
+        });
+    </script>
+</body>
+</html>
