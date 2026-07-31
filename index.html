@@ -3,11 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <title>Gửi dữ liệu 维格表</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 500px; margin: 50px auto; padding: 20px; }
+        input, textarea { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; }
+        button { padding: 10px 30px; background: #5a67d8; color: white; border: none; cursor: pointer; }
+        #status { margin-top: 15px; }
+    </style>
 </head>
 <body>
     <h2>📩 Gửi tin nhắn</h2>
     <input type="text" id="name" placeholder="Tên của bạn">
-    <textarea id="content" placeholder="Nội dung tin nhắn"></textarea>
+    <textarea id="content" placeholder="Nội dung tin nhắn" rows="4"></textarea>
     <button onclick="sendData()">Gửi</button>
     <p id="status"></p>
 
@@ -16,9 +22,10 @@
         // 🔑 CẤU HÌNH - Thay bằng thông tin thực tế của bạn
         // ============================================================
         const API_TOKEN = "uskLIB1kFYYlrNd9LKzRiSh";  // Token của bạn
-        const DATASHEET_ID = "dst9xCMgSYUadTGJKX";   // ID bảng tính
-        const FIELD_NAME = "Tên";                     // Tên cột trong bảng
-        const FIELD_CONTENT = "Nội dung";             // Tên cột trong bảng
+        const DATASHEET_ID = "dst9xCMgSYUadTGJKX";    // ID bảng tính
+        const FIELD_NAME = "Tên";                     // Tên cột "Tên"
+        const FIELD_CONTENT = "Nội dung";             // Tên cột "Nội dung"
+        const FIELD_TIME = "Thời gian";               // Tên cột "Thời gian"
         // ============================================================
 
         async function sendData() {
@@ -26,7 +33,6 @@
             const content = document.getElementById('content').value.trim();
             const status = document.getElementById('status');
 
-            // Kiểm tra dữ liệu
             if (!name || !content) {
                 status.style.color = 'red';
                 status.innerText = '⚠️ Vui lòng nhập đầy đủ thông tin!';
@@ -36,16 +42,19 @@
             status.style.color = 'blue';
             status.innerText = '⏳ Đang gửi...';
 
-            // URL API - LƯU Ý: dùng đúng domain
+            // ⭐ Lấy thời gian hiện tại
+            const now = new Date();
+            const timeString = now.toISOString();
+
             const url = `https://api.vika.cn/fusion/v1/datasheets/${DATASHEET_ID}/records`;
 
-            // Dữ liệu gửi lên - đúng format theo tài liệu
             const payload = {
                 records: [
                     {
                         fields: {
                             [FIELD_NAME]: name,
-                            [FIELD_CONTENT]: content
+                            [FIELD_CONTENT]: content,
+                            [FIELD_TIME]: timeString
                         }
                     }
                 ]
@@ -63,7 +72,6 @@
 
                 const result = await response.json();
 
-                // Kiểm tra kết quả
                 if (response.ok && result.success) {
                     status.style.color = 'green';
                     status.innerText = '✅ Gửi thành công!';
